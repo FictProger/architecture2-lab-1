@@ -10,6 +10,7 @@ import (
 	"github.com/roman-mazur/bood"
 
 	"github.com/FictProger/architecture2-lab-1/build/gomodule"
+	"github.com/FictProger/architecture2-lab-1/build/zip_archive"
 )
 
 var (
@@ -20,6 +21,7 @@ var (
 func NewContext() *blueprint.Context {
 	ctx := bood.PrepareContext()
 	ctx.RegisterModuleType("go_testedbinary", gomodule.SimpleBinFactory)
+	ctx.RegisterModuleType("zip_archive", zip_archive.SimpleZipArchiveFactory)
 	return ctx
 }
 

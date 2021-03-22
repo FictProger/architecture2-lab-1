@@ -12,3 +12,8 @@ go_testedbinary {
   srcs: ["**/*.go", "../go.mod"],
 
 }
+
+zip_archive {
+  name: "my-archive",
+  srcs: ["**/*.txt"],
+}

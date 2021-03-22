@@ -122,7 +122,6 @@ func (gb *goBinaryModuleType) GenerateBuildActions(ctx blueprint.ModuleContext) 
 		},
 	})
 	
-	//TODO fix
 	if len(gb.properties.TestPkg) != 0 {
 		ctx.Build(pctx, blueprint.BuildParams{
 			Description: fmt.Sprintf("Test package %s", gb.properties.TestPkg),
