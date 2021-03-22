@@ -6,6 +6,7 @@ go_testedbinary {
   pkg: "github.com/FictProger/architecture2-lab-1/build/cmd/bood",
 
   // Go package to test.
+  testPkg: "github.com/FictProger/architecture2-lab-1/build/gomodule",
 
   // Build inputs.
   srcs: ["**/*.go", "../go.mod"],

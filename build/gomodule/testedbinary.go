@@ -13,11 +13,24 @@ var (
 
 	// Ninja rule to execute go build.
 	goBuild = pctx.StaticRule("binaryBuild", blueprint.RuleParams{
-		Command:     "cd $workDir && go build -o $outputPath $pkg",
+		//TODO add 'cd $workDir &&' in begin of Command
+		Command:     "go build -o $outputPath $pkg",
 		Description: "build go command $pkg",
 	}, "workDir", "outputPath", "pkg")
 
+	// Ninja rule to execute go mod vendor.
+	goVendor = pctx.StaticRule("vendor", blueprint.RuleParams{
+		//TODO add 'cd $workDir &&' in begin of Command
+		Command:     "go mod vendor",
+		Description: "vendor dependencies of $name",
+	}, "workDir", "name")
 
+	// Ninja rule to execute go test.
+	goTest = pctx.StaticRule("test", blueprint.RuleParams{
+		//TODO add 'cd $workDir &&' in begin of Command
+		Command:     "go test -v $testPkg > $testOutput",
+		Description: "testing $testPkg",
+	},  "workDir", "testPkg", "testOutput")
 )
 
 // goBinaryModuleType implements the simplest Go binary build without running tests for the target Go package.
@@ -31,6 +44,11 @@ type goBinaryModuleType struct {
 		Srcs []string
 		// Exclude patterns.
 		SrcsExclude []string
+		// If to call vendor command.
+		VendorFirst bool
+		// Go package name to test as a command with "go test".
+		TestPkg string
+
 		// Example of how to specify dependencies.
 		Deps []string
 	}
@@ -40,17 +58,35 @@ func (gb *goBinaryModuleType) DynamicDependencies(blueprint.DynamicDependerModul
 	return gb.properties.Deps
 }
 
+func isTest(fileName string) bool {
+	endingIndex := len(fileName) - len("_test.go")
+	if endingIndex < 1 {
+		return false
+	}
+	return fileName[endingIndex:] == "_test.go"
+}
+
 func (gb *goBinaryModuleType) GenerateBuildActions(ctx blueprint.ModuleContext) {
 	name := ctx.ModuleName()
 	config := bood.ExtractConfig(ctx)
 	config.Debug.Printf("Adding build actions for go binary module '%s'", name)
 
 	outputPath := path.Join(config.BaseOutputDir, "bin", name)
+	testOutputPath := path.Join(config.BaseOutputDir, "testOutput")
     
 	var inputs []string
+	var testInputs []string
 	inputErors := false
+	
 	for _, src := range gb.properties.Srcs {
 		if matches, err := ctx.GlobWithDeps(src, gb.properties.SrcsExclude); err == nil {
+			for _, file := range matches {
+				if isTest(file) {
+					testInputs = append(testInputs, file)
+				} else {
+					inputs = append (inputs, file)
+				}
+			}
 			inputs = append(inputs, matches...)
 		} else {
 			ctx.PropertyErrorf("srcs", "Cannot resolve files that match pattern %s", src)
@@ -61,7 +97,21 @@ func (gb *goBinaryModuleType) GenerateBuildActions(ctx blueprint.ModuleContext) 
 		return
 	}
 
-
+	if gb.properties.VendorFirst {
+		vendorDirPath := path.Join(ctx.ModuleDir(), "vendor")
+		ctx.Build(pctx, blueprint.BuildParams{
+			Description: fmt.Sprintf("Vendor dependencies of %s", name),
+			Rule:        goVendor,
+			Outputs:     []string{vendorDirPath},
+			Implicits:   []string{path.Join(ctx.ModuleDir(), "go.mod")},
+			Optional:    true,
+			Args: map[string]string{
+				"workDir": ctx.ModuleDir(),
+				"name":    name,
+			},
+		})
+		inputs = append(inputs, vendorDirPath)
+	}
 
 	ctx.Build(pctx, blueprint.BuildParams{
 		Description: fmt.Sprintf("Build %s as Go binary", name),
@@ -75,6 +125,20 @@ func (gb *goBinaryModuleType) GenerateBuildActions(ctx blueprint.ModuleContext) 
 		},
 	})
 
+	//TODO fix
+	// if len(gb.properties.TestPkg) != 0 {
+	// 	ctx.Build(pctx, blueprint.BuildParams{
+	// 		Description: fmt.Sprintf("Test package %s", gb.properties.TestPkg),
+	// 		Rule:        goTest,
+	// 		Outputs:     []string{outputPath},
+	// 		Implicits:   append(testInputs, inputs...),
+	// 		Args: map[string]string{
+	// 			"testOutput": testOutputPath,
+	// 			"workDir":    ctx.ModuleDir(),
+	// 			"pkg":        gb.properties.TestPkg,
+	// 		},
+	// 	})
+	// }
 }
 
 // SimpleBinFactory is a factory for go binary module type which supports Go command packages without running tests.
