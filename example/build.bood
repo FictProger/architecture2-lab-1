@@ -3,10 +3,10 @@ go_testedbinary {
   name: "bin",
 
   // Go package to build.
-  pkg: "github.com/FictProger/architecture2-lab-1/build/example/bin",
+  pkg: "github.com/FictProger/architecture2-lab-1/example/bin",
 
   // Go package to test.
-  testPkg: "github.com/FictProger/architecture2-lab-1/build/example/bin",
+  testPkg: "github.com/FictProger/architecture2-lab-1/example/bin",
 
   // Build inputs.
   srcs: ["**/*.go", "../go.mod"],
