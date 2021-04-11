@@ -15,9 +15,9 @@ var (
 
 	// Ninja rule to execute zip.
 	zipRule = pctx.StaticRule("zipArchive", blueprint.RuleParams{
-		Command:     "mkdir out/archives && zip $outputFile $files",
+		Command:     "mkdir $outputPath && zip $outputFile $files",
 		Description: "zipping into $outputFile",
-	}, "workDir", "outputFile", "files")
+	}, "workDir", "outputPath", "outputFile", "files")
 )
 
 // zipArchiveType implements the simplest zipping.
@@ -56,6 +56,7 @@ func (zipper *zipArchiveType) GenerateBuildActions(ctx blueprint.ModuleContext) 
 		Outputs:     []string{outputPath},
 		Args: map[string]string{
 			"workDir":    ctx.ModuleDir(),
+			"outputPath": outputPath,
 			"outputFile": outputFile,
 			"files":      filesStr,
 		},
