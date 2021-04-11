@@ -45,6 +45,9 @@ func (zipper *zipArchiveType) GenerateBuildActions(ctx blueprint.ModuleContext) 
 			inputs = append(inputs, matches...)
 		}
 	}
+	for i, _ := range inputs {
+		inputs[i] = "/" + inputs[i]
+	}
 	filesStr := strings.Join(inputs, " ")
 
 	ctx.Build(pctx, blueprint.BuildParams{
