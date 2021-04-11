@@ -15,7 +15,7 @@ var (
 
 	// Ninja rule to execute zip.
 	zipRule = pctx.StaticRule("zipArchive", blueprint.RuleParams{
-		Command:     "pwd && ls && zip $outputFile $files",
+		Command:     "zip $outputFile $files",
 		Description: "zipping into $outputFile",
 	}, "workDir", "outputFile", "files")
 )
