@@ -7,7 +7,7 @@ addons:
   apt:
     update: true
     packages: 
-    - ninja-build
+     - ninja-build
 
 script:
   - cd ./build
