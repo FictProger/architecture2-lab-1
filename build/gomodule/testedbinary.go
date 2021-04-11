@@ -2,9 +2,10 @@ package gomodule
 
 import (
 	"fmt"
+	"path"
+
 	"github.com/google/blueprint"
 	"github.com/roman-mazur/bood"
-	"path"
 )
 
 var (
@@ -27,7 +28,7 @@ var (
 	goTest = pctx.StaticRule("test", blueprint.RuleParams{
 		Command:     "cd $workDir && go test -v $testPkg > $testOutput",
 		Description: "testing $testPkg",
-	},  "workDir", "testPkg", "testOutput")
+	}, "workDir", "testPkg", "testOutput")
 )
 
 // goBinaryModuleType implements the simplest Go binary build without running tests for the target Go package.
@@ -70,18 +71,18 @@ func (gb *goBinaryModuleType) GenerateBuildActions(ctx blueprint.ModuleContext) 
 
 	outputPath := path.Join(config.BaseOutputDir, "bin", name)
 	testOutputPath := path.Join(config.BaseOutputDir, "testOutput.txt")
-    
+
 	var inputs []string
 	var testInputs []string
 	inputErors := false
-	
+
 	for _, src := range gb.properties.Srcs {
 		if matches, err := ctx.GlobWithDeps(src, gb.properties.SrcsExclude); err == nil {
 			for _, file := range matches {
 				if isTest(file) {
 					testInputs = append(testInputs, file)
 				} else {
-					inputs = append (inputs, file)
+					inputs = append(inputs, file)
 				}
 			}
 			inputs = append(inputs, matches...)
@@ -121,7 +122,7 @@ func (gb *goBinaryModuleType) GenerateBuildActions(ctx blueprint.ModuleContext) 
 			"pkg":        gb.properties.Pkg,
 		},
 	})
-	
+
 	if len(gb.properties.TestPkg) != 0 {
 		ctx.Build(pctx, blueprint.BuildParams{
 			Description: fmt.Sprintf("Test package %s", gb.properties.TestPkg),

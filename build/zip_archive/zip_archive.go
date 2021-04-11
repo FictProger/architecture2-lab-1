@@ -2,9 +2,11 @@ package zip_archive
 
 import (
 	"fmt"
+	"path"
+	"strings"
+
 	"github.com/google/blueprint"
 	"github.com/roman-mazur/bood"
-	"path"
 )
 
 var (
@@ -13,9 +15,9 @@ var (
 
 	// Ninja rule to execute zip.
 	zipRule = pctx.StaticRule("zipArchive", blueprint.RuleParams{
-		Command:     "cd $workDir && zip $outputPath",
-		Description: "zipping into $outputPath",
-	}, "workDir", "outputPath")
+		Command:     "zip $outputFile $files",
+		Description: "zipping into $outputFile",
+	}, "workDir", "outputFile", "files")
 )
 
 // zipArchiveType implements the simplest zipping.
@@ -33,24 +35,26 @@ type zipArchiveType struct {
 func (zipper *zipArchiveType) GenerateBuildActions(ctx blueprint.ModuleContext) {
 	name := ctx.ModuleName()
 	config := bood.ExtractConfig(ctx)
-	outputPath := path.Join(config.BaseOutputDir, "archives", zipper.properties.Name)
-    
+	outputPath := path.Join(config.BaseOutputDir, "archives")
+	outputFile := path.Join(outputPath, zipper.properties.Name) + ".zip"
+
 	var inputs []string
-	
+
 	for _, src := range zipper.properties.Srcs {
 		if matches, err := ctx.GlobWithDeps(src, nil); err == nil {
 			inputs = append(inputs, matches...)
 		}
 	}
+	filesStr := strings.Join(inputs, " ")
 
 	ctx.Build(pctx, blueprint.BuildParams{
 		Description: fmt.Sprintf("Archiving into '%s'", name),
 		Rule:        zipRule,
 		Outputs:     []string{outputPath},
-		Implicits:   inputs,
 		Args: map[string]string{
 			"workDir":    ctx.ModuleDir(),
-			"outputPath": outputPath,
+			"outputFile": outputFile,
+			"files":      filesStr,
 		},
 	})
 }
