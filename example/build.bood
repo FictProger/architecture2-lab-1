@@ -1,6 +1,6 @@
 go_testedbinary {
   // Module (and output) name.
-  name: "example",
+  name: "bin",
 
   // Go package to build.
   pkg: "github.com/FictProger/architecture2-lab-1/build/example/bin",
